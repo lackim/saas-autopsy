@@ -1,0 +1,20 @@
+{
+  "name": "saas-autopsy",
+  "version": "0.1.0",
+  "description": "Post-mortem analysis of SaaS startups — find out if a startup is alive, declining, or dead",
+  "type": "module",
+  "bin": {
+    "saas-autopsy": "./src/cli.js"
+  },
+  "files": ["src"],
+  "keywords": ["cli", "saas", "startup", "revenue", "analysis", "trustmrr"],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@shipcli/core": "^0.1.0",
+    "@shipcli/share": "^0.1.1",
+    "kleur": "^4.1.5"
+  }
+}
