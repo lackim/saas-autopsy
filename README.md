@@ -19,11 +19,21 @@ npm install -g saas-autopsy
 You need a TrustMRR API key. Get one at [trustmrr.com](https://trustmrr.com).
 
 ```bash
-# Option 1: Environment variable
-export TRUSTMRR_API_KEY=tmrr_your_key_here
+# Save your key securely (stored in ~/.saas-autopsy/config.json)
+saas-autopsy config set-key tmrr_your_key_here
 
-# Option 2: Pass directly
-saas-autopsy <slug> --api-key tmrr_your_key_here
+# That's it — all commands will use the saved key automatically
+saas-autopsy some-startup
+```
+
+Other options for CI/scripts:
+
+```bash
+# Pipe from file (key never appears in shell history or ps)
+cat ~/.trustmrr-key | saas-autopsy some-startup --api-key-stdin
+
+# Environment variable
+TRUSTMRR_API_KEY=tmrr_... saas-autopsy some-startup
 ```
 
 ## Usage

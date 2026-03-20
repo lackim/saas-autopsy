@@ -1,19 +1,31 @@
 import { phase, status, success, fatal, fmt } from "@shipcli/core/output";
 import { spinner } from "@shipcli/core/spinner";
-import { getApiKey, fetchStartup, searchStartup, parseTarget } from "../lib/trustmrr.js";
+import { fetchStartup, searchStartup, parseTarget } from "../lib/trustmrr.js";
+import { loadApiKey } from "./config.js";
 import { analyze } from "../lib/analyze.js";
 import { renderCertificate } from "../lib/certificate.js";
+
+async function readStdin() {
+  var chunks = [];
+  for await (var chunk of process.stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString().trim();
+}
 
 export async function run(target, options) {
   if (!target) {
     fatal("Please provide a startup slug or name.", "Usage: saas-autopsy <slug>");
   }
 
-  var apiKey = getApiKey(options);
+  // Read API key from stdin if requested
+  if (options.apiKeyStdin) {
+    options.apiKey = await readStdin();
+  }
+
+  var apiKey = loadApiKey(options);
   if (!apiKey) {
     fatal(
       "TrustMRR API key required.",
-      "Set TRUSTMRR_API_KEY env var or pass --api-key <key>\n  Get your key at https://trustmrr.com"
+      "Run: saas-autopsy config set-key <your-key>\n  Get your key at https://trustmrr.com"
     );
   }
 

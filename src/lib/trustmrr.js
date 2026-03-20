@@ -1,9 +1,5 @@
 var BASE_URL = "https://trustmrr.com/api/v1";
 
-export function getApiKey(options) {
-  return options.apiKey || process.env.TRUSTMRR_API_KEY || null;
-}
-
 export async function fetchStartup(slug, apiKey) {
   var res = await fetch(`${BASE_URL}/startups/${slug}`, {
     headers: { Authorization: `Bearer ${apiKey}` },
