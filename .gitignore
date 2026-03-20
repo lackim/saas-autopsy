@@ -3,6 +3,7 @@ dist/
 .next/
 web/out/
 web/next-env.d.ts
+config.json
 .DS_Store
 *.log
 .env
