@@ -5,8 +5,12 @@ Post-mortem analysis of SaaS startups. Find out if an indie SaaS is thriving, de
 ## Quick Start
 
 ```bash
-npx saas-autopsy <slug> --api-key <your-trustmrr-key>
+npm install --global saas-autopsy
+saas-autopsy config set-key tmrr_your_key_here
+saas-autopsy <slug>
 ```
+
+Requires Node.js 24 or newer.
 
 ## Installation
 
@@ -16,7 +20,7 @@ npm install -g saas-autopsy
 
 ## Setup
 
-You need a TrustMRR API key. Get one at [trustmrr.com](https://trustmrr.com).
+You need a TrustMRR API key. Create one in the [developer dashboard](https://trustmrr.com/developer).
 
 ```bash
 # Save your key securely (stored in ~/.saas-autopsy/config.json)
@@ -32,7 +36,7 @@ Other options for CI/scripts:
 # Pipe from file (key never appears in shell history or ps)
 cat ~/.trustmrr-key | saas-autopsy some-startup --api-key-stdin
 
-# Environment variable
+# Environment variable (recommended for CI)
 TRUSTMRR_API_KEY=tmrr_... saas-autopsy some-startup
 ```
 
@@ -50,11 +54,17 @@ saas-autopsy some-startup --share
 
 # Get raw JSON output
 saas-autopsy some-startup --json
+
+# Analyze a TrustMRR URL directly
+saas-autopsy https://trustmrr.com/startup/some-startup
 ```
 
 ## What It Analyzes
 
 saas-autopsy examines verified revenue data to determine startup health:
+
+TrustMRR monetary values are returned in cents and converted to USD for terminal,
+JSON, and share-card output. Decimal growth values are converted to percentages.
 
 | Signal | Severity |
 |--------|----------|
@@ -109,7 +119,17 @@ All revenue data is verified by [TrustMRR](https://trustmrr.com) — real number
 
 ## Built with
 
-[shipcli](https://github.com/lackim/shipcli) — CLI-as-a-Product toolkit
+[shipcli 0.4](https://github.com/lackim/shipcli) — typed CLI framework,
+packaging, landing-page scaffolding, and share-card generation.
+
+## Development
+
+```bash
+pnpm install --frozen-lockfile
+pnpm check
+```
+
+`pnpm check` runs TypeScript validation, tests, the CLI build, and the landing-page build.
 
 ## License
 

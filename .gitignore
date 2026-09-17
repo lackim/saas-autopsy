@@ -4,6 +4,7 @@ dist/
 web/out/
 web/next-env.d.ts
 config.json
+saas-autopsy-*.png
 .DS_Store
 *.log
 .env
