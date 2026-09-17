@@ -9,6 +9,9 @@ permissions:
 
 jobs:
   publish:
+    # npm requires the package to exist before a trusted publisher can be added.
+    # v0.2.0 was the one-time local bootstrap publish; every later tag uses OIDC.
+    if: github.ref_name != 'v0.2.0'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -24,3 +27,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: npm publish --access public
+      - name: Verify published version and provenance
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          test "$(npm view "saas-autopsy@$VERSION" version)" = "$VERSION"
+          test "$(npm view "saas-autopsy@$VERSION" dist.attestations.provenance.predicateType)" = "https://slsa.dev/provenance/v1"
