@@ -59,5 +59,17 @@ jobs:
       - name: Verify published version and provenance
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          test "$(npm view "saas-autopsy@$VERSION" version)" = "$VERSION"
-          test "$(npm view "saas-autopsy@$VERSION" dist.attestations.provenance.predicateType)" = "https://slsa.dev/provenance/v1"
+          for attempt in {1..12}; do
+            PUBLISHED_VERSION="$(npm view "saas-autopsy@$VERSION" version 2>/dev/null || true)"
+            PREDICATE_TYPE="$(npm view "saas-autopsy@$VERSION" dist.attestations.provenance.predicateType 2>/dev/null || true)"
+
+            if [ "$PUBLISHED_VERSION" = "$VERSION" ] && [ "$PREDICATE_TYPE" = "https://slsa.dev/provenance/v1" ]; then
+              exit 0
+            fi
+
+            echo "Waiting for npm registry propagation (attempt $attempt/12)..."
+            sleep 10
+          done
+
+          echo "Published package or provenance did not become visible in time." >&2
+          exit 1
