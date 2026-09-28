@@ -8,7 +8,7 @@ const STEPS = [
   {
     number: "02",
     title: "Connect",
-    command: "saas-autopsy config set-key tmrr_…",
+    command: "saas-autopsy config set-key --stdin",
     description: "Store your TrustMRR API key in a private local configuration file.",
   },
   {

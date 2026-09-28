@@ -7,7 +7,7 @@ const DEMO_LINES = [
   { text: "", tone: "muted" },
   { text: "added saas-autopsy", tone: "success" },
   { text: "", tone: "muted" },
-  { text: "$ saas-autopsy config set-key tmrr_••••", tone: "command" },
+  { text: "$ saas-autopsy config set-key --stdin", tone: "command" },
   { text: "API key saved: tmrr_••••", tone: "success" },
   { text: "", tone: "muted" },
   { text: "$ saas-autopsy example-saas", tone: "command" },
