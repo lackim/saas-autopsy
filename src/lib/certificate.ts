@@ -1,6 +1,7 @@
 import { fmt } from "@shipcli/core/output";
 import kleur from "kleur";
 import type { AnalysisReport, HealthStatus } from "./analyze.js";
+import { safeTerminalText } from "./terminal.js";
 
 const WIDTH = 54;
 // eslint-disable-next-line no-control-regex
@@ -45,21 +46,25 @@ function money(value: number): string {
 }
 
 export function renderCertificate(report: AnalysisReport): string {
+  const name = safeTerminalText(report.name);
+  const category = safeTerminalText(report.category);
+  const country = safeTerminalText(report.country);
+  const causeOfDeath = safeTerminalText(report.causeOfDeath);
   const border = "═".repeat(WIDTH);
   const lines: string[] = [
     "",
     kleur.dim(`  ╔${border}╗`),
     row(kleur.bold("         SAAS DEATH CERTIFICATE")),
     kleur.dim(`  ╠${border}╣`),
-    row(`  Name:       ${fmt.bold(truncate(report.name, WIDTH - 14))}`),
-    row(`  Category:   ${truncate(report.category, WIDTH - 14)}`),
-    row(`  Country:    ${truncate(report.country, WIDTH - 14)}`),
+    row(`  Name:       ${fmt.bold(truncate(name, WIDTH - 14))}`),
+    row(`  Category:   ${truncate(category, WIDTH - 14)}`),
+    row(`  Country:    ${truncate(country, WIDTH - 14)}`),
   ];
 
   if (report.foundedDate) rowPush(lines, `  Founded:    ${formatDate(report.foundedDate)}`);
   if (report.ageInDays !== null) rowPush(lines, `  Age:        ${formatAge(report.ageInDays)}`);
   lines.push(row(""));
-  lines.push(row(`  Cause:      ${kleur.red(truncate(report.causeOfDeath, WIDTH - 14))}`));
+  lines.push(row(`  Cause:      ${kleur.red(truncate(causeOfDeath, WIDTH - 14))}`));
   lines.push(row(`  Status:     ${statusBadge(report.status)}`));
   lines.push(row(`  Score:      ${scoreBadge(report.score)}/100`));
   lines.push(row(""));
@@ -99,7 +104,7 @@ export function renderCertificate(report: AnalysisReport): string {
     lines.push(row(""));
     for (const signal of report.signals) {
       const icon = signal.severity === "critical" ? kleur.red("✖") : kleur.yellow("⚠");
-      const wrapped = wrapText(signal.signal, WIDTH - 4);
+      const wrapped = wrapText(safeTerminalText(signal.signal), WIDTH - 4);
       lines.push(row(`  ${icon} ${wrapped[0]}`));
       for (const continuation of wrapped.slice(1)) lines.push(row(`    ${continuation}`));
     }
@@ -107,8 +112,8 @@ export function renderCertificate(report: AnalysisReport): string {
   }
 
   lines.push(kleur.dim(`  ╚${border}╝`), "");
-  if (report.description) lines.push(kleur.dim(`  "${report.description}"`), "");
-  if (report.website) lines.push(kleur.dim(`  ${report.website}`), "");
+  if (report.description) lines.push(kleur.dim(`  "${safeTerminalText(report.description)}"`), "");
+  if (report.website) lines.push(kleur.dim(`  ${safeTerminalText(report.website)}`), "");
   return lines.join("\n");
 }
 

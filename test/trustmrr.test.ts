@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { loadApiKey } from "../src/commands/config.js";
+import { configureKey, loadApiKey, readApiKeyFromStdin } from "../src/commands/config.js";
 import {
   fetchStartup,
   parseTarget,
   searchStartup,
   TrustMrrApiError,
+  TrustMrrResponseError,
   type TrustMrrStartup,
 } from "../src/lib/trustmrr.js";
 
@@ -26,6 +27,8 @@ const startup: TrustMrrStartup = {
   onSale: false,
   askingPrice: null,
   multiple: null,
+  techStack: [],
+  cofounders: [],
   xHandle: null,
 };
 
@@ -41,11 +44,17 @@ describe("parseTarget", () => {
 
 describe("TrustMRR client", () => {
   it("unwraps startup responses", async () => {
-    const fetchImpl: typeof fetch = async () => new Response(
-      JSON.stringify({ data: startup }),
-      { status: 200, headers: { "content-type": "application/json" } },
-    );
+    let options: RequestInit | undefined;
+    const fetchImpl: typeof fetch = async (_input, init) => {
+      options = init;
+      return new Response(
+        JSON.stringify({ data: startup }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    };
     assert.deepEqual(await fetchStartup("test-saas", "tmrr_test", fetchImpl), startup);
+    assert.equal(options?.redirect, "error");
+    assert.ok(options?.signal instanceof AbortSignal);
   });
 
   it("returns null only for a missing startup", async () => {
@@ -73,6 +82,18 @@ describe("TrustMRR client", () => {
     assert.deepEqual(await searchStartup("Test & SaaS", "tmrr_test", fetchImpl), [startup]);
     assert.equal(new URL(requestedUrl).searchParams.get("search"), "Test & SaaS");
   });
+
+  it("rejects malformed startup data instead of trusting TypeScript casts", async () => {
+    const fetchImpl: typeof fetch = async () => new Response(
+      JSON.stringify({ data: { name: "Missing slug" } }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+
+    await assert.rejects(
+      fetchStartup("broken", "tmrr_test", fetchImpl),
+      (error: unknown) => error instanceof TrustMrrResponseError,
+    );
+  });
 });
 
 describe("loadApiKey", () => {
@@ -89,5 +110,33 @@ describe("loadApiKey", () => {
 
   it("returns null without credentials", () => {
     assert.equal(loadApiKey({}, emptyConfig, {}), null);
+  });
+});
+
+describe("readApiKeyFromStdin", () => {
+  it("trims a piped key without logging it", async () => {
+    async function* input() {
+      yield Buffer.from("tmrr_test_key\n");
+    }
+
+    assert.equal(await readApiKeyFromStdin(input()), "tmrr_test_key");
+  });
+
+  it("stores a piped key without requiring it as a process argument", async () => {
+    let stored: unknown;
+    const config = {
+      get: () => undefined,
+      set: (_key: string, value: unknown) => {
+        stored = value;
+      },
+      save: () => undefined,
+    };
+    async function* input() {
+      yield "tmrr_secure_test_key\n";
+    }
+
+    await configureKey(undefined, { stdin: true }, config, input());
+
+    assert.equal(stored, "tmrr_secure_test_key");
   });
 });

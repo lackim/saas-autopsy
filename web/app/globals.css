@@ -148,6 +148,35 @@ body {
   text-transform: uppercase;
 }
 
+.legal-copy {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.legal-copy h2 {
+  color: #f5f5f5;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.legal-copy p {
+  margin-top: 0.75rem;
+  max-width: 46rem;
+  color: #a3a3a3;
+  line-height: 1.75;
+}
+
+.legal-copy a {
+  color: #86efac;
+  text-decoration: underline;
+  text-decoration-color: rgba(134, 239, 172, 0.35);
+  text-underline-offset: 0.2em;
+}
+
+.legal-copy a:hover {
+  color: #bbf7d0;
+}
+
 .terminal {
   height: 22rem;
   overflow: hidden;

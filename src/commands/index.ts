@@ -3,21 +3,20 @@ import { loadShipcliConfig } from "@shipcli/core/project-config";
 import { spinner } from "@shipcli/core/spinner";
 import { analyze } from "../lib/analyze.js";
 import { renderCertificate } from "../lib/certificate.js";
-import { fetchStartup, parseTarget, searchStartup, TrustMrrApiError } from "../lib/trustmrr.js";
+import {
+  fetchStartup,
+  parseTarget,
+  searchStartup,
+  TrustMrrApiError,
+  TrustMrrResponseError,
+} from "../lib/trustmrr.js";
+import { safeFilenameSegment, safeTerminalText } from "../lib/terminal.js";
 import { saasDeathCertificateTemplate } from "../share/card.js";
-import { loadApiKey, type ApiKeyOptions } from "./config.js";
+import { loadApiKey, readApiKeyFromStdin, type ApiKeyOptions } from "./config.js";
 
 export interface RunOptions extends ApiKeyOptions {
   json?: boolean;
   share?: boolean;
-}
-
-async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks).toString().trim();
 }
 
 function failForApiError(error: unknown): never {
@@ -33,6 +32,9 @@ function failForApiError(error: unknown): never {
     }
     fatal(`TrustMRR API request failed (${error.status}).`, "Try again later.");
   }
+  if (error instanceof TrustMrrResponseError) {
+    fatal("TrustMRR returned unexpected data.", "Try again later or report the API response change.");
+  }
   fatal("Could not connect to TrustMRR.", "Check your network connection and try again.");
 }
 
@@ -41,13 +43,13 @@ export async function run(target: string | undefined, options: RunOptions): Prom
     fatal("Please provide a startup slug or name.", "Usage: saas-autopsy <slug>");
   }
 
-  if (options.apiKeyStdin) options.apiKey = await readStdin();
+  if (options.apiKeyStdin) options.apiKey = await readApiKeyFromStdin();
 
   const apiKey = loadApiKey(options);
   if (!apiKey) {
     fatal(
       "TrustMRR API key required.",
-      "Run: saas-autopsy config set-key <your-key>\n  Get your key at https://trustmrr.com/developer",
+      "Run: saas-autopsy config set-key --stdin\n  Get your key at https://trustmrr.com/developer",
     );
   }
 
@@ -60,10 +62,14 @@ export async function run(target: string | undefined, options: RunOptions): Prom
   try {
     startup = await fetchStartup(slug, apiKey);
     if (!startup) {
-      fetchSpinner.update({ text: `Searching for "${target}"...` });
+      fetchSpinner.update({ text: `Searching for "${safeTerminalText(target)}"...` });
       const results = await searchStartup(target, apiKey);
       startup = results[0] ?? null;
-      if (startup) fetchSpinner.success({ text: `Found: ${startup.name} (${startup.slug})` });
+      if (startup) {
+        fetchSpinner.success({
+          text: `Found: ${safeTerminalText(startup.name)} (${safeTerminalText(startup.slug)})`,
+        });
+      }
     } else {
       fetchSpinner.success({ text: "Startup data fetched" });
     }
@@ -75,7 +81,7 @@ export async function run(target: string | undefined, options: RunOptions): Prom
   if (!startup) {
     fetchSpinner.error({ text: "Startup not found" });
     fatal(
-      `Could not find "${target}" on TrustMRR.`,
+      `Could not find "${safeTerminalText(target)}" on TrustMRR.`,
       "Check the slug at https://trustmrr.com or try a different name.",
     );
   }
@@ -98,7 +104,7 @@ export async function run(target: string | undefined, options: RunOptions): Prom
       const { share } = await import("@shipcli/share");
       await share(saasDeathCertificateTemplate, report, {
         toolName: "saas-autopsy",
-        filename: `saas-autopsy-${report.slug}.png`,
+        filename: `saas-autopsy-${safeFilenameSegment(report.slug)}.png`,
       });
       shareSpinner.success({ text: "Share image generated" });
     }

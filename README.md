@@ -6,7 +6,8 @@ Post-mortem analysis of SaaS startups. Find out if an indie SaaS is thriving, de
 
 ```bash
 npm install --global saas-autopsy
-saas-autopsy config set-key tmrr_your_key_here
+saas-autopsy config set-key --stdin
+# Paste the key, press Enter, then finish stdin (Ctrl-D on macOS/Linux)
 saas-autopsy <slug>
 ```
 
@@ -23,8 +24,10 @@ npm install -g saas-autopsy
 You need a TrustMRR API key. Create one in the [developer dashboard](https://trustmrr.com/developer).
 
 ```bash
-# Save your key securely (stored in ~/.saas-autopsy/config.json)
-saas-autopsy config set-key tmrr_your_key_here
+# Save your key without placing it in shell history or the process list.
+# The key is stored in ~/.saas-autopsy/config.json with user-only permissions.
+saas-autopsy config set-key --stdin
+# Paste the key, press Enter, then finish stdin (Ctrl-D on macOS/Linux)
 
 # That's it — all commands will use the saved key automatically
 saas-autopsy some-startup
@@ -33,8 +36,11 @@ saas-autopsy some-startup
 Other options for CI/scripts:
 
 ```bash
-# Pipe from file (key never appears in shell history or ps)
+# Analyze once with a key from a protected file
 cat ~/.trustmrr-key | saas-autopsy some-startup --api-key-stdin
+
+# Or save a key supplied by a secret manager/file
+cat ~/.trustmrr-key | saas-autopsy config set-key --stdin
 
 # Environment variable (recommended for CI)
 TRUSTMRR_API_KEY=tmrr_... saas-autopsy some-startup
@@ -119,13 +125,17 @@ All revenue data is verified by [TrustMRR](https://trustmrr.com) — real number
 
 ## Built with
 
-[shipcli 0.4](https://github.com/lackim/shipcli) — typed CLI framework,
+[shipcli 0.5](https://github.com/lackim/shipcli) — typed CLI framework,
 packaging, landing-page scaffolding, and share-card generation.
+
+The static project website includes basic Privacy and Terms pages. It does not
+load analytics, advertising trackers, contact forms, or non-essential cookies,
+so it does not require a consent banner in its current form.
 
 ## Development
 
 ```bash
-pnpm install --frozen-lockfile
+pnpm install --frozen-lockfile --ignore-scripts
 pnpm check
 ```
 
