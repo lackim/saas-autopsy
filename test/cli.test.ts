@@ -24,6 +24,14 @@ describe("saas-autopsy CLI", () => {
     assert.match(root.stdout, /config\s+Manage configuration/);
     assert.equal(config.status, 0, config.stderr);
     assert.match(config.stdout, /set-key/);
+
+    const setKey = spawnSync(
+      process.execPath,
+      ["--import", "tsx", "src/cli.ts", "config", "set-key", "--help"],
+      { cwd: projectRoot, encoding: "utf-8", env },
+    );
+    assert.equal(setKey.status, 0, setKey.stderr);
+    assert.match(setKey.stdout, /--stdin/);
   });
 
   it("rejects an empty target before contacting TrustMRR", () => {

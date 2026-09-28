@@ -23,16 +23,17 @@ const cli = createCLI({
 cli
   .argument("[target]", "Startup slug or name to analyze")
   .option("--share", "Generate shareable death certificate image")
-  .option("--api-key <key>", "TrustMRR API key")
+  .option("--api-key <key>", "TrustMRR API key (prefer --api-key-stdin)")
   .option("--api-key-stdin", "Read API key from stdin")
   .action(run);
 
 const configCommand = cli.command("config").description("Manage configuration");
 
 configCommand
-  .command("set-key <key>")
-  .description("Save your TrustMRR API key securely")
-  .action(configureKey);
+  .command("set-key [key]")
+  .description("Save your TrustMRR API key (prefer --stdin to keep it out of shell history)")
+  .option("--stdin", "Read the API key from stdin")
+  .action((key: string | undefined, options: { stdin?: boolean }) => configureKey(key, options));
 
 configCommand
   .command("show")

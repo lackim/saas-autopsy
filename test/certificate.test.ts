@@ -46,4 +46,20 @@ describe("renderCertificate", () => {
     assert.match(output, /MRR:\s+\$425/);
     assert.match(output, /Revenue \(30d\):\s+\$1,234\.56/);
   });
+
+  it("strips terminal control sequences from TrustMRR metadata", () => {
+    const unsafe = report();
+    unsafe.name = "Test\u001b]52;c;Y2xpcGJvYXJk\u0007 SaaS";
+    unsafe.description = "Line one\nLine two\u009b31m";
+    unsafe.website = "https://example.com\rspoofed";
+
+    const output = renderCertificate(unsafe);
+
+    // Certificate line breaks are expected; terminal-active controls are not.
+    // eslint-disable-next-line no-control-regex
+    assert.doesNotMatch(output, /[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/);
+    assert.match(output, /Test ]52;c;Y2xpcGJvYXJk SaaS/);
+    assert.match(output, /Line one Line two 31m/);
+    assert.match(output, /https:\/\/example\.com spoofed/);
+  });
 });
